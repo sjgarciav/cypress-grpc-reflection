@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package users;
+
+// Definimos el servicio de consulta
+service UserService {
+  rpc GetUser (UserRequest) returns (UserResponse);
+}
+
+// Lo que envía el cliente
+message UserRequest {
+  string id = 1;
+}
+
+// Lo que devuelve el servidor
+message UserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}

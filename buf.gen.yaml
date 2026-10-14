@@ -1,0 +1,9 @@
+version: v2
+plugins:
+  # Genera clases de mensajes y descriptores de servicio (compatibles con @connectrpc/connect v2)
+  - local: protoc-gen-es
+    out: src/generated
+    opt:
+      - target=ts
+inputs:
+  - directory: proto-files

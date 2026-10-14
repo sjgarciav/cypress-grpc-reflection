@@ -1,0 +1,33 @@
+{
+  "name": "cypress-grpc",
+  "version": "1.0.0",
+  "description": "Framework de pruebas gRPC con Cypress + Buf + @connectrpc/connect",
+  "main": "index.js",
+  "scripts": {
+    "proto:generate": "buf generate",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "test": "npm run cy:run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@bufbuild/buf": "^1.73.0",
+    "@bufbuild/protoc-gen-es": "^2.15.0",
+    "@types/node": "^26.6.1",
+    "cypress": "15.20.1",
+    "ts-node": "^10.9.2",
+    "typescript": "5.9.3"
+  },
+  "allowScripts": {
+    "@bufbuild/buf@1.73.0": true,
+    "cypress@15.20.1": true
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.15.0",
+    "@connectrpc/connect": "^2.2.0",
+    "@connectrpc/connect-node": "^2.2.0"
+  }
+}

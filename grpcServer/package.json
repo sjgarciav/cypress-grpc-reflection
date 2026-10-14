@@ -1,0 +1,14 @@
+{
+  "name": "grpc-user-mock-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Basic gRPC mock server for the users UserService",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.4",
+    "@grpc/proto-loader": "^0.7.13"
+  }
+}
