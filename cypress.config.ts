@@ -9,7 +9,7 @@ export default defineConfig({
     supportFile: "cypress/support/e2e.ts",
     setupNodeEvents(on, config) {
       // Registra las tareas de Node que ejecutan las llamadas gRPC reales
-      // usando @connectrpc/connect-node (requiere entorno Node, no navegador).
+      // usando @grpc/grpc-js (requiere entorno Node, no navegador).
       on("task", userServiceGrpcTasks);
 
       return config;

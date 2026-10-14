@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+grpcServer/node_modules/
+
+# Logs
+npm-debug.log*
+*.log
+
+# Build / generated output
+src/generated/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# Environment variables
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

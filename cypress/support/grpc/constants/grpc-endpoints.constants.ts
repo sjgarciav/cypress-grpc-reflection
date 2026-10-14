@@ -4,6 +4,6 @@
  * (dev, qa, mock, etc.) sin tocar el código de los clientes o de las pruebas.
  */
 export const GRPC_ENDPOINTS = {
-  // Connect's Node gRPC transport uses http:// for insecure (h2c) gRPC.
-  USER_SERVICE_BASE_URL: "http://0.0.0.0:50051",
+  // Dirección "host:port" (sin esquema) usada por el cliente nativo de @grpc/grpc-js.
+  USER_SERVICE_ADDRESS: "0.0.0.0:50051",
 } as const;

@@ -2,12 +2,18 @@
 
 Proyecto de ejemplo para probar servicios gRPC desde Cypress. Cypress ejecuta
 los specs, mientras que las llamadas gRPC se realizan en el proceso Node mediante
-`cy.task()` y `@connectrpc/connect-node`; así se evita intentar usar HTTP/2 desde
-el navegador.
+`cy.task()` y `@grpc/grpc-js`; así se evita intentar usar HTTP/2 desde el navegador.
 
 El repositorio incluye un servidor gRPC local de prueba basado en `@grpc/grpc-js`.
-Implementa `users.UserService/GetUser` y no depende de WireMock Cloud ni de otro
-servicio externo.
+Implementa `users.UserService/GetUser`, expone **gRPC Server Reflection**
+(`@grpc/reflection`) y no depende de WireMock Cloud ni de otro servicio externo.
+
+Gracias a la reflection, el cliente de Cypress descubre en tiempo real la
+definición de `UserService` directamente desde el servidor en ejecución: no
+necesita el `.proto` del negocio ni código pre-generado (p. ej.
+`src/generated/user_pb.ts`). Lo único vendorizado localmente es
+`proto-files/reflection/v1/reflection.proto`, que es el protocolo estándar y
+estable de gRPC Server Reflection (no código de negocio).
 
 ## Requisitos
 
@@ -44,7 +50,7 @@ npm run cy:open
 ```
 
 Si cambias el puerto del servidor usando `PORT`, actualiza también
-`USER_SERVICE_BASE_URL` en
+`USER_SERVICE_ADDRESS` en
 `cypress/support/grpc/constants/grpc-endpoints.constants.ts`.
 
 ## Servicio y prueba incluidos
@@ -84,10 +90,12 @@ grpcurl \
   users.UserService/GetUser
 ```
 
-## Generar código desde el proto
+## Generar código desde el proto (opcional)
 
-El código TypeScript generado se encuentra en `src/generated/user_pb.ts`.
-Después de modificar el proto, puedes regenerarlo con Buf:
+Las pruebas de Cypress ya no requieren código pre-generado: obtienen la
+definición de `UserService` vía reflection en tiempo de ejecución. El comando
+de Buf se mantiene por si algún otro consumidor del repo necesita el código
+TypeScript generado en `src/generated/user_pb.ts`:
 
 ```bash
 npm run proto:generate
@@ -101,21 +109,28 @@ cypress/
 ├── fixtures/user-service/         # Request y respuesta esperada
 └── support/grpc/
     ├── assertions/                # Aserciones de status y respuesta
-    ├── clients/                   # Cliente Connect/gRPC
+    ├── clients/                   # Cliente gRPC que descubre el esquema vía reflection
     ├── constants/                 # Endpoint, metadata y status gRPC
     ├── tasks/                     # Llamadas gRPC ejecutadas en Node
     └── types/                     # Tipos de payload y resultado
-grpcServer/                        # Servidor gRPC mock local
-proto-files/                       # Definiciones .proto
-src/generated/                     # Código TypeScript generado por Buf
+grpcServer/                        # Servidor gRPC mock local (con reflection)
+proto-files/
+├── user.proto                     # Definición del negocio (UserService)
+└── reflection/v1/reflection.proto # Protocolo estándar de gRPC Server Reflection
+src/generated/                     # Código TypeScript generado por Buf (no usado por los tests)
 cypress.config.ts                  # Configuración de Cypress y registro de tasks
-buf.gen.yaml                       # Configuración de generación de código
+buf.gen.yaml                       # Configuración de generación de código (opcional)
 ```
 
 ## Tecnologías principales
 
 - Cypress para ejecutar las pruebas.
-- Buf y `@bufbuild/protoc-gen-es` para generar código TypeScript desde protobuf.
-- `@bufbuild/protobuf`, `@connectrpc/connect` y `@connectrpc/connect-node` para
-  trabajar con mensajes protobuf e invocar el servicio desde Node.
-- `@grpc/grpc-js` y `@grpc/proto-loader` para levantar el servidor mock.
+- `@grpc/grpc-js` y `@grpc/proto-loader` para levantar el servidor mock y para
+  invocarlo desde las pruebas de Cypress.
+- `@grpc/reflection` en el servidor para exponer gRPC Server Reflection.
+- El cliente de pruebas consulta la reflection del servidor en tiempo real
+  (usando únicamente `@grpc/grpc-js` + `@grpc/proto-loader`), por lo que no
+  depende de código protobuf pre-generado para invocar `UserService`.
+- Buf y `@bufbuild/protoc-gen-es` siguen disponibles de forma opcional para
+  generar código TypeScript desde el proto (`src/generated/user_pb.ts`), por
+  si se necesita en otro contexto distinto a las pruebas de Cypress.

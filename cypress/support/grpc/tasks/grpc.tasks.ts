@@ -1,4 +1,4 @@
-import { ConnectError } from "@connectrpc/connect";
+import * as grpc from "@grpc/grpc-js";
 import { createUserServiceClient } from "../clients/user-service.client";
 import { GRPC_METADATA_KEYS } from "../constants/grpc-metadata.constants";
 import { GRPC_STATUS_CODES } from "../constants/grpc-status.constants";
@@ -11,39 +11,39 @@ import type { GetUserTaskPayload, GrpcTaskResult, UserResponseData } from "../ty
  * framework si se necesitaran en el futuro.
  */
 async function callGetUser(payload: GetUserTaskPayload): Promise<GrpcTaskResult<UserResponseData>> {
-  const client = createUserServiceClient();
+  const client = await createUserServiceClient();
+
+  const metadata = new grpc.Metadata();
+  metadata.set(GRPC_METADATA_KEYS.AUTHORIZATION, `Bearer ${payload.metadata.bearerToken}`);
+  metadata.set(GRPC_METADATA_KEYS.INDICADOR, payload.metadata.indicador);
 
   try {
-    const response = await client.getUser(
-      payload.request,
-      {
-        headers: {
-          [GRPC_METADATA_KEYS.AUTHORIZATION]: `Bearer ${payload.metadata.bearerToken}`,
-          [GRPC_METADATA_KEYS.INDICADOR]: payload.metadata.indicador,
-        },
-      },
-    );
+    return await new Promise<GrpcTaskResult<UserResponseData>>((resolve) => {
+      client.getUser(payload.request, metadata, (error, response) => {
+        if (error) {
+          resolve({
+            statusCode: error.code ?? GRPC_STATUS_CODES.UNKNOWN,
+            success: false,
+            data: null,
+            errorMessage: error.details ?? error.message,
+          });
+          return;
+        }
 
-    return {
-      statusCode: GRPC_STATUS_CODES.OK,
-      success: true,
-      data: {
-        id: response.id,
-        name: response.name,
-        email: response.email,
-      },
-      errorMessage: null,
-    };
-  } catch (error) {
-    // ConnectError expone el código de estado gRPC equivalente y el mensaje del servidor.
-    const connectError = ConnectError.from(error);
-
-    return {
-      statusCode: connectError.code,
-      success: false,
-      data: null,
-      errorMessage: connectError.message,
-    };
+        resolve({
+          statusCode: GRPC_STATUS_CODES.OK,
+          success: true,
+          data: {
+            id: response!.id,
+            name: response!.name,
+            email: response!.email,
+          },
+          errorMessage: null,
+        });
+      });
+    });
+  } finally {
+    client.close();
   }
 }
 
@@ -51,7 +51,7 @@ async function callGetUser(payload: GetUserTaskPayload): Promise<GrpcTaskResult<
  * Registro de tareas gRPC relacionadas con UserService.
  * Este objeto se conecta a Cypress mediante `on('task', ...)` en cypress.config.ts.
  * Las tareas corren en el proceso Node de Cypress, por lo que aquí sí se puede
- * usar @connectrpc/connect-node sin restricciones del navegador.
+ * usar @grpc/grpc-js sin restricciones del navegador.
  */
 export const userServiceGrpcTasks = {
   "grpc:userService:getUser": callGetUser,

@@ -3,6 +3,7 @@
 const path = require('node:path');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const { ReflectionService } = require('@grpc/reflection');
 
 const PROTO_PATH = path.resolve(__dirname, '..', 'proto-files', 'user.proto');
 const PORT = process.env.PORT || '50051';
@@ -61,6 +62,13 @@ function getUser(call, callback) {
 function startServer() {
   const server = new grpc.Server();
   server.addService(users.UserService.service, { getUser });
+
+  // Expone el servicio de reflection para que los clientes (p. ej. las pruebas
+  // de Cypress) puedan obtener la definición del proto en tiempo real, sin
+  // necesitar el archivo .proto ni código generado estáticamente.
+  const reflection = new ReflectionService(packageDefinition);
+  reflection.addToServer(server);
+
   server.bindAsync(
     `0.0.0.0:${PORT}`,
     grpc.ServerCredentials.createInsecure(),
